@@ -48,9 +48,38 @@ if ($uploadOk == 0) {
     }
 }
 
+function  create_image($imagepath){
+        $username=$_POST['username'];
+        $email=$_POST['email'];
+        $contactno=$_POST['contactNo'];
+        // echo $imagepath;
+        $im = @imagecreate(336, 192) or die("Cannot Initialize new GD image stream");
+        $background_color = imagecolorallocate($im, 255, 255, 255);  // yellow
+        $blue = imagecolorallocate($im, 0, 0, 255); 
+        $phonetextcolor = imagecolorallocate($im, 255, 255, 255);
+        $nametextcolor = imagecolorallocate($im, 0, 0, 0);
+        $emailtextcolor = imagecolorallocate($im, 0, 0, 0);
+        $font='tomnr.ttf';
 
 
+        $overlayImage = imagecreatefromjpeg($imagepath);
+        imageantialias(imagefilledrectangle ($im,   0,  140, 336,192, $blue), true);
 
+        imagefilledrectangle ($im,   0,  0, 336,10, $blue);
+        imageantialias(imagefilledrectangle ($im,   0,  0, 336,10, $blue), true);
+        imageantialias(imagestring($im, 7, 5, 160,$contactno, $phonetextcolor), true);
+
+        
+        // imagestring($im, 7, 130,20, 'Sathira Umesh', $nametextcolor);
+        
+        imageantialias(imagettftext($im, 20, 0, 11, 21, $nametextcolor, $font, $username), true);
+        imageantialias(        imagestring($im, 7,130, 40, $email, $emailtextcolor), true);
+
+        imagecopyresampled($im, $overlayImage, 10, 20, 0, 0, 100,100,imagesx($overlayImage),imagesy($overlayImage));
+
+
+        imagejpeg($im,"image.jpg");
+        imagedestroy($im);
 }
 ?>
 
