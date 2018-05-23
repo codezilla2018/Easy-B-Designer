@@ -59,7 +59,7 @@ function  create_image($imagepath){
         $phonetextcolor = imagecolorallocate($im, 255, 255, 255);
         $nametextcolor = imagecolorallocate($im, 0, 0, 0);
         $emailtextcolor = imagecolorallocate($im, 0, 0, 0);
-        $font='tomnr.ttf';
+        $font='fonts/tomnr.ttf';
 
 
         $overlayImage = imagecreatefromjpeg($imagepath);
