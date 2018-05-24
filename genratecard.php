@@ -1,9 +1,33 @@
 <?php
+include "phpqrcode-master/qrlib.php";
+
+// database conectivity
+
+    $hostname="localhost";
+    $password="root";
+    $username="root";
+    $database="businesscard";
 
 
-// print "<img src=image.png?".date("U").">";
+
+    $conn = new mysqli($hostname, $username, $password, $database);
+
+    if (!$conn) {
+        die($conn->connect_error);
+    }else{
+        // echo "connected successfuly";
+    }
+
+     
+
+// form data
+$username=$_POST['username'];
+$email=$_POST['email'];
+$contactno=$_POST['contactNo'];
+$cardimagepath="./cards"."/$username".".jpg";
 
 
+// image uploader
 $target_dir = "uploads/";
 $target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
 
@@ -48,38 +72,50 @@ if ($uploadOk == 0) {
     }
 }
 
-function  create_image($imagepath){
-        $username=$_POST['username'];
-        $email=$_POST['email'];
-        $contactno=$_POST['contactNo'];
-        // echo $imagepath;
+
+
+function  create_image($imagepath,$username,$email,$contactno,$connection){
+
+       
         $im = @imagecreate(336, 192) or die("Cannot Initialize new GD image stream");
-        $background_color = imagecolorallocate($im, 255, 255, 255);  // yellow
-        $blue = imagecolorallocate($im, 0, 0, 255); 
+        $background_color = imagecolorallocate($im, 255, 255, 255);
+
+        $blue = imagecolorallocate($im, 0, 0, 255); // two top  box colors of the card
+
+        // deatils of the 
         $phonetextcolor = imagecolorallocate($im, 255, 255, 255);
         $nametextcolor = imagecolorallocate($im, 0, 0, 0);
         $emailtextcolor = imagecolorallocate($im, 0, 0, 0);
-        $font='fonts/tomnr.ttf';
+
+        $font='./fonts/tomnr.ttf';
 
 
-        $overlayImage = imagecreatefromjpeg($imagepath);
-        imageantialias(imagefilledrectangle ($im,   0,  140, 336,192, $blue), true);
+        $overlayImage = imagecreatefromjpeg($imagepath);// image of the user
 
+        imagefilledrectangle ($im,   0,  140, 336,192, $blue);
         imagefilledrectangle ($im,   0,  0, 336,10, $blue);
-        imageantialias(imagefilledrectangle ($im,   0,  0, 336,10, $blue), true);
-        imageantialias(imagestring($im, 7, 5, 160,$contactno, $phonetextcolor), true);
+        imagefilledrectangle ($im,   0,  0, 336,10, $blue);
+        imagestring($im, 7, 5, 160,$contactno, $phonetextcolor);
+        imagettftext($im, 20, 0, 130, 60, $nametextcolor, $font, $username);
+        imagestring($im, 7,130, 70, $email, $emailtextcolor);
 
-        
-        // imagestring($im, 7, 130,20, 'Sathira Umesh', $nametextcolor);
-        
-        imageantialias(imagettftext($im, 20, 0, 11, 21, $nametextcolor, $font, $username), true);
-        imageantialias(        imagestring($im, 7,130, 40, $email, $emailtextcolor), true);
+        imagecopyresampled($im, $overlayImage, 10, 20, 0, 0, 100,100,imagesx($overlayImage),imagesy($overlayImage)); // final image
 
-        imagecopyresampled($im, $overlayImage, 10, 20, 0, 0, 100,100,imagesx($overlayImage),imagesy($overlayImage));
+        QRcode::png("http://www.sitepoint.com", "./cards/$username.png", "L", 4, 4); // genrating qr code link for downloading
+
+        imagejpeg($im,"./cards/$username.jpg");// creating the final image
+        imagedestroy($im); // destroy the image
+        $cardpath="./cards/$username.jpg";
+        $qrcardpath="./cards/$username.png";
+
+        $query= "INSERT INTO `cards` (`id`, `name`, `email`, `telephone`,`cardpath`,`qrcardpath`) VALUES (NULL, '$username', '$email', '$contactno','$cardpath','$qrcardpath')";
+
+        $result = $connection->query($query);
+
+       
 
 
-        imagejpeg($im,"image.jpg");
-        imagedestroy($im);
+
 }
 ?>
 
@@ -90,15 +126,39 @@ function  create_image($imagepath){
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./bootstrap-3.3.7/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./style.css">
+
     <title>Document</title>
 </head>
-<body>
-    <div class=image-container>  
-        <?php
-        create_image($target_file);
-        print "<img src=image.png?".date("U").">";
+<body class="body">
+    <div class="container">  
+        <div class=" col-md-12 image-container">
+            <div class="col-md-4"></div>
+            <div class="col-md-4 well">
+            <?php
+        create_image($target_file,$username,$email,$contactno,$conn);
+        print"<a download='$username.jpg' href='./cards/$username.jpg' title='ImageName'>";
+         print "<img src='./cards/$username.jpg'>";
+         print"</a>";
         ?>
+        <?php
+       print" <div class='download-button col-md-12'>Click on the image to download</div>";
+        
+      
+        print  "<img alt='ImageName' src='./cards/$username.png'>";
+       
+    ?>
+            </div>
+            <div class="col-md-4">
+           
+            </div>
+
+        </div>
+
      </div>
+
+       <script src="./jquery-3.3.1.min.js"></script>
+    <script src="./bootstrap-3.3.7/dist/js/bootstrap.min.js"></script>
 </body>
 </html>
